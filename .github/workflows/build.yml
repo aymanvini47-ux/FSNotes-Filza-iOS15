@@ -1,0 +1,44 @@
+name: Build FSNotes IPA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Build FSNotes
+        run: |
+          xcodebuild \
+            -project "FSNotes.xcodeproj" \
+            -scheme "FSNotes iOS" \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Package IPA
+        run: |
+          mkdir -p Payload
+          APP=$(find build/Build/Products/Release-iphoneos -name "*.app" -print -quit)
+
+          if [ -z "$APP" ]; then
+            echo "Error: FSNotes app was not found!"
+            exit 1
+          fi
+
+          cp -R "$APP" Payload/
+          zip -r FSNotes-Filza.ipa Payload
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: FSNotes-Filza-IPA
+          path: FSNotes-Filza.ipa
