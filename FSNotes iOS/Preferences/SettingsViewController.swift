@@ -1,9 +1,10 @@
+
 //
 //  SettingsViewController.swift
 //  FSNotes iOS
 //
 //  Created by Oleksandr Glushchenko on 2/25/18.
-//  Copyright © 2018 Oleksandr Glushchenko. All rights reserved.
+//  Copyright © 2018 FSNotes. All rights reserved.
 //
 
 import UIKit
@@ -27,7 +28,7 @@ class SettingsViewController: UITableViewController, UIDocumentPickerDelegate {
             NSLocalizedString("Git", comment: "Settings"),
             NSLocalizedString("Web", comment: "Settings"),
             NSLocalizedString("Icon", comment: "Settings"),
-            NSLocalizedString("Advanced", comment: "Settings"),
+            NSLocalizedString("Advanced", comment: "Settings")
         ], [
             NSLocalizedString("iCloud Drive", comment: "Settings"),
             NSLocalizedString("Add External Folder", comment: "Settings"),
@@ -37,7 +38,8 @@ class SettingsViewController: UITableViewController, UIDocumentPickerDelegate {
             NSLocalizedString("Support", comment: "Settings"),
             NSLocalizedString("Website", comment: "Settings"),
             "X",
-            NSLocalizedString("Thanks", comment: "Settings")
+            NSLocalizedString("Thanks", comment: "Settings"),
+            "Open Filza"
         ]
     ]
 
@@ -59,10 +61,11 @@ class SettingsViewController: UITableViewController, UIDocumentPickerDelegate {
             "graduationcap.fill",
             "house.fill",
             "x.circle.fill",
-            "heart.fill"
+            "heart.fill",
+            "folder.fill"
         ]
     ]
-    
+
     private var gradients = [
         [
             ["#0a84ff", "#30d158"],
@@ -83,16 +86,17 @@ class SettingsViewController: UITableViewController, UIDocumentPickerDelegate {
             ["#dfbd69", "#926f34"],
             ["#09203F", "#537895"],
             ["#868F96", "#596164"],
-            ["#ff9966", "#ff5e62"]
+            ["#ff9966", "#ff5e62"],
+            ["#0a84ff", "#5ac8fa"]
         ]
     ]
 
-    var rowsInSection = [7, 4, 4]
+    var rowsInSection = [7, 4, 5]
 
     override func viewWillAppear(_ animated: Bool) {
         navigationController?.navigationBar.prefersLargeTitles = true
     }
-    
+
     override func viewDidLoad() {
         title = NSLocalizedString("Settings", comment: "Sidebar settings")
         navigationItem.rightBarButtonItem = Buttons.getRateUs(target: self, selector: #selector(rateUs))
@@ -103,7 +107,7 @@ class SettingsViewController: UITableViewController, UIDocumentPickerDelegate {
         version.font = version.font.withSize(17).bold()
 
         if let versionString = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
-            let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
+           let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
             version.text =
                 NSLocalizedString("Version", comment: "Settings")
                 + " \(versionString) "
@@ -115,22 +119,22 @@ class SettingsViewController: UITableViewController, UIDocumentPickerDelegate {
         version.textAlignment = .center
 
         tableView.tableFooterView = version
-        
+
         navigationController?.navigationBar.prefersLargeTitles = true
     }
 
     override func numberOfSections(in tableView: UITableView) -> Int {
         return 3
     }
-    
+
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return rowsInSection[section]
     }
-    
+
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         return sections[section]
     }
-    
+
     override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
         return 50
     }
@@ -138,11 +142,21 @@ class SettingsViewController: UITableViewController, UIDocumentPickerDelegate {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let iconName = icons[indexPath.section][indexPath.row]
         let gradient = gradients[indexPath.section][indexPath.row]
-        
-        var cell = SettingsTableViewCell(iconName: iconName, gradient: gradient, style: .default, reuseIdentifier: iconName)
-        
+
+        var cell = SettingsTableViewCell(
+            iconName: iconName,
+            gradient: gradient,
+            style: .default,
+            reuseIdentifier: iconName
+        )
+
         if indexPath.section == 0x01 && indexPath.row == 0x03 {
-            cell = SettingsTableViewCell(iconName: iconName, gradient: gradient, style: .subtitle, reuseIdentifier: iconName)
+            cell = SettingsTableViewCell(
+                iconName: iconName,
+                gradient: gradient,
+                style: .subtitle,
+                reuseIdentifier: iconName
+            )
         }
 
         cell.textLabel?.text = rows[indexPath.section][indexPath.row]
@@ -156,26 +170,37 @@ class SettingsViewController: UITableViewController, UIDocumentPickerDelegate {
             switch indexPath.row {
             case 0:
                 let uiSwitch = UISwitch()
-                uiSwitch.addTarget(self, action: #selector(switchValueDidChange(_:)), for: .valueChanged)
+                uiSwitch.addTarget(
+                    self,
+                    action: #selector(switchValueDidChange(_:)),
+                    for: .valueChanged
+                )
                 uiSwitch.isOn = UserDefaultsManagement.iCloudDrive
 
                 cell.textLabel?.text = "iCloud Drive"
                 cell.accessoryView = uiSwitch
+
             case 1:
                 cell.accessoryType = .none
+
             case 2:
                 cell.accessoryType = .disclosureIndicator
+
             case 3:
                 cell.detailTextLabel?.textColor = UIColor.blackWhite
                 cell.detailTextLabel?.numberOfLines = 0
                 cell.detailTextLabel?.lineBreakMode = .byWordWrapping
-                cell.detailTextLabel?.text = NSLocalizedString("Compatible with Bear and Ulysses (textbundle), markdown, txt.", comment: "")
+                cell.detailTextLabel?.text = NSLocalizedString(
+                    "Compatible with Bear and Ulysses (textbundle), markdown, txt.",
+                    comment: ""
+                )
+
             default:
                 return cell
             }
         }
 
-        if indexPath.section == 0x02 && indexPath.row == 0x03 {
+        if indexPath.section == 0x02 && indexPath.row >= 0x03 {
             cell.accessoryType = .disclosureIndicator
             return cell
         }
@@ -183,38 +208,50 @@ class SettingsViewController: UITableViewController, UIDocumentPickerDelegate {
         return cell
     }
 
-    private func image( _ image:UIImage, withSize newSize:CGSize) -> UIImage {
+    private func image(_ image: UIImage, withSize newSize: CGSize) -> UIImage {
         UIGraphicsBeginImageContextWithOptions(newSize, false, UIScreen.main.scale)
-        image.draw(in: CGRect(x: 0,y: 0,width: newSize.width,height: newSize.height))
+        image.draw(in: CGRect(
+            x: 0,
+            y: 0,
+            width: newSize.width,
+            height: newSize.height
+        ))
         let newImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
         return newImage!.withRenderingMode(.automatic)
     }
-    
+
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         defer {
             tableView.deselectRow(at: indexPath, animated: false)
         }
 
         var lvc: UIViewController?
-        
+
         if indexPath.section == 0x00 {
             switch indexPath.row {
             case 0:
                 lvc = DefaultExtensionViewController()
+
             case 1:
                 lvc = SettingsEditorViewController()
+
             case 2:
                 lvc = SecurityViewController()
+
             case 3:
                 guard let project = Storage.shared().getDefault() else { return }
                 lvc = AppDelegate.getGitVC(for: project)
+
             case 4:
                 lvc = SFTPViewController()
+
             case 5:
                 lvc = AppIconViewController()
+
             case 6:
                 lvc = ProViewController()
+
             default:
                 return
             }
@@ -224,31 +261,41 @@ class SettingsViewController: UITableViewController, UIDocumentPickerDelegate {
             switch indexPath.row {
             case 0:
                 break
+
             case 1:
                 if #available(iOS 13.0, *) {
-                    let viewController = ExternalViewController(forOpeningContentTypes: [.folder], asCopy: false)
+                    let viewController = ExternalViewController(
+                        forOpeningContentTypes: [.folder],
+                        asCopy: false
+                    )
                     viewController.delegate = viewController
                     present(viewController, animated: true, completion: nil)
                 }
                 break
+
             case 2:
                 lvc = ProjectsViewController()
                 break
+
             case 3:
                 var picker: UIDocumentPickerViewController
 
                 if #available(iOS 14.0, *) {
                     picker = UIDocumentPickerViewController(forOpeningContentTypes: [.item])
                 } else {
-                    picker = UIDocumentPickerViewController(documentTypes: ["public.item"], in: .import)
+                    picker = UIDocumentPickerViewController(
+                        documentTypes: ["public.item"],
+                        in: .import
+                    )
                 }
 
                 picker.allowsMultipleSelection = true
                 picker.delegate = self
                 self.present(picker, animated: true, completion: nil)
                 break
-            default: break
 
+            default:
+                break
             }
         }
 
@@ -258,39 +305,75 @@ class SettingsViewController: UITableViewController, UIDocumentPickerDelegate {
             switch indexPath.row {
             case 0x00:
                 url = URL(string: "https://github.com/glushchenko/fsnotes/issues")
-                break
+
             case 0x01:
                 url = URL(string: "https://fsnot.es")
-                break
+
             case 0x02:
                 url = URL(string: "https://twitter.com/fsnotesapp")
-                break
+
             case 0x03:
                 lvc = ThanksViewController()
+
+            case 0x04:
+                var rootURL: URL?
+
+                if UserDefaultsManagement.iCloudDrive,
+                   let iCloudURL = FileManager.default.url(
+                       forUbiquityContainerIdentifier: nil
+                   )?.appendingPathComponent("Documents").standardized {
+                    rootURL = iCloudURL
+                } else {
+                    rootURL = FileManager.default.urls(
+                        for: .documentDirectory,
+                        in: .userDomainMask
+                    ).first?.standardized
+                }
+
+                if let rootURL = rootURL {
+                    var components = URLComponents()
+                    components.scheme = "filza"
+                    components.host = "view"
+                    components.path = rootURL.path
+                    url = components.url
+                }
+
+            default:
                 break
-            default: break
             }
 
             if let url = url {
-                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                UIApplication.shared.open(
+                    url,
+                    options: [:],
+                    completionHandler: nil
+                )
             }
         }
-        
+
         if let controller = lvc {
             self.navigationController?.pushViewController(controller, animated: true)
         }
     }
 
-    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+    func documentPicker(
+        _ controller: UIDocumentPickerViewController,
+        didPickDocumentsAt urls: [URL]
+    ) {
         guard let storageUrl = UserDefaultsManagement.storageUrl else { return }
 
         for url in urls {
-            try? FileManager.default.copyItem(at: url, to: storageUrl.appendingPathComponent(url.lastPathComponent))
+            try? FileManager.default.copyItem(
+                at: url,
+                to: storageUrl.appendingPathComponent(url.lastPathComponent)
+            )
         }
     }
 
     @objc func rateUs() {
-        if let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
+        if let scene = UIApplication.shared.connectedScenes.first(
+            where: { $0.activationState == .foregroundActive }
+        ) as? UIWindowScene {
             DispatchQueue.main.async {
                 AudioServicesPlaySystemSound(1519)
                 SKStoreReviewController.requestReview(in: scene)
@@ -315,3 +398,4 @@ class SettingsViewController: UITableViewController, UIDocumentPickerDelegate {
         }
     }
 }
+
